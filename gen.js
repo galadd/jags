@@ -102,7 +102,7 @@ function generateFunctionDefinition(signature, stateMutability) {
     let functionDefinition = `${signature} {`;
 
     if (stateMutability === 'pure' || stateMutability === 'view') {
-        const functionCall = `contract.methods.${signature.slice(9)}.call();`;
+        const functionCall = `return contract.methods.${signature.slice(9)}.call();`;
         functionDefinition += `
     // Call the Solidity function and handle the response
     ${functionCall}
