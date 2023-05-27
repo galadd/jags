@@ -53,7 +53,8 @@ const fs = require("fs");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const web3 = new Web3(\`https://goerli.infura.io/v3/\${process.env.INFURA_KEY}\`);
+const networkUrl = process.env.NETWORK_URL; // Set the network URL as an environment variable
+const web3 = new Web3(networkUrl);
 const contractABI = JSON.parse(fs.readFileSync("${jsonFileName}"));
 const contractAddress = process.env.CONTRACT_ADDRESS;
 const contract = new web3.eth.Contract(contractABI, contractAddress);
