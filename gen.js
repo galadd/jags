@@ -67,14 +67,16 @@ const privateKey = '0x' + process.env.PRIVATE_KEY;
     for (const func of functions) {
         const { name, inputs, stateMutability } = func;
 
-        // Generate the function signature
-        const functionSignature = generateFunctionSignature(name, inputs);
+        if (Array.isArray(inputs) && inputs.length > 0) {
+            // Generate the function signature
+            const functionSignature = generateFunctionSignature(name, inputs);
 
-        // Generate the function definition
-        const functionDefinition = generateFunctionDefinition(functionSignature, stateMutability, inputs);
+            // Generate the function definition
+            const functionDefinition = generateFunctionDefinition(functionSignature, stateMutability, inputs);
 
-        // Append the function definition to the JavaScript program
-        jsProgram += functionDefinition + '\n\n';
+            // Append the function definition to the JavaScript program
+            jsProgram += functionDefinition + '\n\n';
+        }
     }
 
     // Add the module.exports statement
@@ -95,7 +97,7 @@ function generateFunctionSignature(name, inputs) {
 }
 
 // Function to generate the function definition
-function generateFunctionDefinition(signature, stateMutability, inputs) {
+function generateFunctionDefinition(signature, stateMutability) {
     let functionDefinition = `${signature} {`;
 
     if (stateMutability === 'pure' || stateMutability === 'view') {
@@ -107,6 +109,12 @@ function generateFunctionDefinition(signature, stateMutability, inputs) {
     } else if (stateMutability === 'nonpayable') {
         const functionCall = `contract.methods.${signature.slice(9)}.send({ from: sender });;`;
         functionDefinition += `
+    // Call the Solidity function and handle the response
+    ${functionCall}
+}`;
+} else if (stateMutability === 'payable') {
+    const functionCall = `contract.methods.${signature.slice(9)}.send({ from: sender, value: amount });`;
+    functionDefinition += `
     // Call the Solidity function and handle the response
     ${functionCall}
 }`;
