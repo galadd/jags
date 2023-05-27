@@ -17,31 +17,31 @@ fs.readdir('.', (err, files) => {
 
         // Read the JSON file
         fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error(err);
-            return;
-        }
-
-        try {
-            // Parse the JSON data
-            const functions = JSON.parse(data);
-
-            // Generate the JavaScript program
-            const jsProgram = generateJSProgram(functions, jsonFile);
-
-            // Write the JavaScript program to a file with the same name as the JSON file
-            const outputFile = path.join('.', `${path.basename(jsonFile, '.json')}.js`);
-            fs.writeFile(outputFile, jsProgram, (err) => {
             if (err) {
                 console.error(err);
                 return;
             }
 
-            console.log(`JavaScript program generated successfully: ${outputFile}`);
-            });
-        } catch (err) {
-            console.error(`Error parsing JSON in file: ${filePath}`, err);
-        }
+            try {
+                // Parse the JSON data
+                const functions = JSON.parse(data);
+
+                // Generate the JavaScript program
+                const jsProgram = generateJSProgram(functions, jsonFile);
+
+                // Write the JavaScript program to a file with the same name as the JSON file
+                const outputFile = path.join('.', `${path.basename(jsonFile, '.json')}.js`);
+                fs.writeFile(outputFile, jsProgram, (err) => {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    console.log(`JavaScript program generated successfully: ${outputFile}`);
+                });
+            } catch (err) {
+                console.error(`Error parsing JSON in file: ${filePath}`, err);
+            }
         });
     });
 });
@@ -71,7 +71,7 @@ const privateKey = '0x' + process.env.PRIVATE_KEY;
         const functionSignature = generateFunctionSignature(name, inputs);
 
         // Generate the function definition
-        const functionDefinition = generateFunctionDefinition(functionSignature, stateMutability);
+        const functionDefinition = generateFunctionDefinition(functionSignature, stateMutability, inputs);
 
         // Append the function definition to the JavaScript program
         jsProgram += functionDefinition + '\n\n';
@@ -95,9 +95,23 @@ function generateFunctionSignature(name, inputs) {
 }
 
 // Function to generate the function definition
-function generateFunctionDefinition(signature, stateMutability) {
-    return `${signature} {
-  // Logic for the ${signature}
-  // Call the Solidity function and handle the response
-}`;
+function generateFunctionDefinition(signature, stateMutability, inputs) {
+    let functionDefinition = `${signature} {`;
+
+    if (stateMutability === 'pure' || stateMutability === 'view') {
+        const functionCall = `contract.methods.${signature.slice(9)}.call();`;
+        functionDefinition += `
+    // Call the Solidity function and handle the response
+    ${functionCall}
+    `;
+    } else {
+        functionDefinition += `
+    // Logic for the ${signature}
+    // Call the Solidity function and handle the response
+    `;
+    }
+
+    functionDefinition += '}';
+
+    return functionDefinition;
 }
