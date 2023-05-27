@@ -103,15 +103,19 @@ function generateFunctionDefinition(signature, stateMutability, inputs) {
         functionDefinition += `
     // Call the Solidity function and handle the response
     ${functionCall}
-    `;
+}`;
+    } else if (stateMutability === 'nonpayable') {
+        const functionCall = `contract.methods.${signature.slice(9)}.send({ from: sender });;`;
+        functionDefinition += `
+    // Call the Solidity function and handle the response
+    ${functionCall}
+}`;
     } else {
         functionDefinition += `
     // Logic for the ${signature}
     // Call the Solidity function and handle the response
-    `;
+}`;
     }
-
-    functionDefinition += '}';
 
     return functionDefinition;
 }
