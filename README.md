@@ -6,6 +6,10 @@ Pending when the docs will be written
 ```
 git clone https://github.com/galadd/jags.git
 ```
+<b>Usage</b> 
+```
+node src/gen.js
+```
 <b>Install Dependencies</b> 
 ```
 npm install
