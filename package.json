@@ -1,0 +1,26 @@
+{
+  "name": "jags",
+  "version": "1.0.0",
+  "description": "Javascript API Generator for Solidity Programs",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/galadd/jags.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/galadd/jags/issues"
+  },
+  "homepage": "https://github.com/galadd/jags#readme",
+  "devDependencies": {
+    "mocha": "^10.2.0"
+  }
+}
