@@ -3,7 +3,9 @@ const path = require("path");
 
 // Read the directory
 const jags = async () => {
-  fs.readdir(".", (err, files) => {
+  // this is to access the test files
+  fs.readdir("test/jsons", (err, files) => {
+    // fs.readdir(".", (err, files) => {
     if (err) {
       console.error(err);
       return;
@@ -14,7 +16,7 @@ const jags = async () => {
 
     // Process each JSON file
     jsonFiles.forEach((jsonFile) => {
-      const filePath = path.join(".", jsonFile);
+      const filePath = path.join("test/jsons", jsonFile);
 
       // Read the JSON file
       fs.readFile(filePath, "utf8", (err, dat) => {

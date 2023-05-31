@@ -5,7 +5,7 @@ const jags = require("../src/gen");
 
 // Remove all generated files before tests are run
 before(() => {
-  fs.readdir(".", (err, files) => {
+  fs.readdir("test/jsons", (err, files) => {
     const jsonFiles = files.filter((file) => path.extname(file) === ".js");
     jsonFiles.forEach((file) => fs.unlink(path.join(".", file), (err) => {}));
   });
