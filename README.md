@@ -18,3 +18,13 @@ npm install
 ```
 npm test
 ```
+
+## Plan
+Generate Javascript sdk for contracts through <br>
+
+- [] development environment
+- [] block explorer url
+- [] Smart Contracts only (No development environment)
+
+Other possibilities
+How react hooks can be manipulated to automatically implement jags
