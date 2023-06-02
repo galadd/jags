@@ -12,7 +12,7 @@ git clone https://github.com/galadd/jags.git
 <b>Usage</b>
 
 ```
-node src/run.js
+node src/gen.js [directory]
 ```
 
 <b>Install Dependencies</b>
@@ -26,7 +26,6 @@ npm install
 ```
 npm test
 ```
-
 ## Plan
 Generate Javascript sdk for contracts through <br>
 
@@ -44,4 +43,4 @@ How react hooks can be manipulated to automatically implement jags
 4. jags [network] [file/path/to/abi]
 
 Possibilities <br>
-... react [file/path/to/react-env]
+ react [file/path/to/react-env]
