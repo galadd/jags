@@ -1,112 +1,67 @@
 const fs = require('fs');
-const sinon = require('sinon');
-const assert = require('assert');
+const chai = require('chai');
+const mock = require('mock-fs');
 const { createFile, writeToFile } = require('../src/fileOperation');
+
+const expect = chai.expect;
 
 describe('File Operations', () => {
 
-    describe('createFile', () => {
-
-        it('should create a new file if it does not exist', () => {
-            const filename = 'example.txt';
-
-            // Mock the fs.existsSync method to return false
-            sinon.stub(fs, 'existsSync').returns(false);
-
-            // Spy on the fs.writeFileSync method
-            const writeFileSyncSpy = sinon.spy(fs, 'writeFileSync');
-
-            // Call the function being tested
-            createFile(filename);
-
-            // Verify that fs.writeFileSync is called with the correct arguments
-            assert.strictEqual(writeFileSyncSpy.calledOnce, true);
-            assert.strictEqual(writeFileSyncSpy.firstCall.args[0], filename);
-            assert.strictEqual(writeFileSyncSpy.firstCall.args[1], '');
-
-            // Restore the stub and spy
-            fs.existsSync.restore();
-            writeFileSyncSpy.restore();
-        });
+    before(() => {
+        // Mock the file system
+        mock();
     });
 
-        it('should not create a new file if it already exists', () => {
-            const filename = 'example.txt';
+    after(() => {
+        // Restore the original file system
+        mock.restore();
+    });
 
-            // Mock the fs.existsSync method to return true
-            sinon.stub(fs, 'existsSync').returns(true);
+    describe('createFile', () => {
+        it('should create a new file if it does not exist', () => {
+        const filename = 'test.txt';
 
-            // Spy on the fs.writeFileSync method
-            const writeFileSyncSpy = sinon.spy(fs, 'writeFileSync');
+        createFile(filename);
 
-            // Call the function being tested
-            createFile(filename);
+        // Assert that the file exists
+        expect(fs.existsSync(filename)).to.be.true;
+    });
 
-            // Verify that fs.writeFileSync is not called
-            assert.strictEqual(writeFileSyncSpy.called, false);
+    it('should not create a new file if it already exists', () => {
+        const filename = 'test.txt';
 
-            // Restore the stub and spy
-            fs.existsSync.restore();
-            writeFileSyncSpy.restore();
-        });
+        // Create a dummy file
+        fs.writeFileSync(filename, 'dummy content');
+
+        createFile(filename);
+
+        // Assert that the file still has the original content
+        expect(fs.readFileSync(filename, 'utf8')).to.equal('dummy content');
+    });
+});
 
     describe('writeToFile', () => {
-        
         it('should append content to an existing file', () => {
-            const filename = 'example.txt';
-            const content = 'Some content to append';
-        
-            // Mock the fs.existsSync method to return true
-            sinon.stub(fs, 'existsSync').returns(true);
-        
-            // Spy on the fs.appendFileSync method
-            const appendFileSyncSpy = sinon.spy(fs, 'appendFileSync');
-        
-            // Call the function being tested
+            const filename = 'test.txt';
+            const content = 'new content';
+
+            // Create a dummy file
+            fs.writeFileSync(filename, 'initial content');
+
             writeToFile(filename, content);
-        
-            // Verify that fs.appendFileSync is called with the correct arguments
-            assert.strictEqual(appendFileSyncSpy.calledOnce, true);
-            assert.strictEqual(appendFileSyncSpy.firstCall.args[0], filename);
-            assert.strictEqual(appendFileSyncSpy.firstCall.args[1], "\n" + content);
-        
-            // Restore the stub and spy
-            fs.existsSync.restore();
-            appendFileSyncSpy.restore();
+
+            // Assert that the file now contains both initial and new content
+            expect(fs.readFileSync(filename, 'utf8')).to.equal('initial content\nnew content');
         });
-        
-        it('should return "Nil" when successful', () => {
-            const filename = 'example.txt';
-            const content = 'Some content to append';
-        
-            // Mock the fs.existsSync method to return true
-            sinon.stub(fs, 'existsSync').returns(true);
-        
-            // Call the function being tested
-            const result = writeToFile(filename, content);
-        
-            // Verify that the result is "Nil"
-            assert.strictEqual(result, 'Nil');
-        
-            // Restore the stub
-            fs.existsSync.restore();
-        });
-        
-        it('should return an error message when the file does not exist', () => {
+
+        it('should return an error message if the file does not exist', () => {
             const filename = 'nonexistent.txt';
-            const content = 'Some content to append';
-        
-            // Mock the fs.existsSync method to return false
-            sinon.stub(fs, 'existsSync').returns(false);
-        
-            // Call the function being tested
+            const content = 'new content';
+
             const result = writeToFile(filename, content);
-        
-            // Verify that the result is the expected error message
-            assert.strictEqual(result, 'Err: File does not exist');
-        
-            // Restore the stub
-            fs.existsSync.restore();
+
+            // Assert that an error message is returned
+            expect(result).to.equal('Err: File does not exist');
         });
     });
 });
