@@ -13,6 +13,21 @@ function writeToFile(filename, content) {
     // Check if file exists
     if (fs.existsSync(filename)) {
         try {
+            fs.writeFileSync(filename, content);
+            return "Nil"
+        } catch (err) {
+            return err
+        }
+    } else {
+        return "Err: File does not exist"
+    }
+}
+
+function appendToFile(filename, content) {
+
+    // Check if file exists
+    if (fs.existsSync(filename)) {
+        try {
             // Append content to existing  file
             fs.appendFileSync(filename, "\n" + content);
             return "Nil"
@@ -72,6 +87,7 @@ function scanDirectory(directory, fileExtension) {
 module.exports = {
     createFile,
     writeToFile,
+    appendToFile,
     readFile,
     scanDirectory
 }
