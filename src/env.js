@@ -32,7 +32,9 @@ function getNetworkUrls(data) {
   }
 }
 
-module.export = getNetworkUrls
+module.exports = {
+  getNetworkUrls,
+}
 
 // // Usage
 // readFile(filePath)
