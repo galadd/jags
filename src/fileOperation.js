@@ -24,6 +24,19 @@ function writeToFile(filename, content) {
     }
 }
 
+function readFile(filePath) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+        resolve(data);
+        });
+    });
+}
+
 function scanDirectory(directory, fileExtension) {
     const files = [];
 
@@ -59,5 +72,6 @@ function scanDirectory(directory, fileExtension) {
 module.exports = {
     createFile,
     writeToFile,
+    readFile,
     scanDirectory
 }
