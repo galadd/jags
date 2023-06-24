@@ -1,11 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const chai = require('chai');
+const { expect } = require('chai');
 const mock = require('mock-fs');
 const assert = require('assert');
-const { promisify } = require('util');
-const readFile = promisify(fs.readFile);
-const { createFile, writeToFile, scanDirectory } = require('../src/fileOperation');
+const { createFile, writeToFile, appendToFile, scanDirectory } = require('../src/fileOperation');
 
 describe('File Operations', () => {
 
@@ -43,7 +41,20 @@ describe('File Operations', () => {
     });
 
     describe('writeToFile', () => {
-        it('should append content to an existing file', () => {
+        it('should write content to an empty file', () => {
+            const filename = 'test.txt';
+            const content = 'content';
+
+            // Create a dummy file
+            fs.writeFileSync(filename, '');
+
+            writeToFile(filename, content);
+
+            // Assert that the file now contains content
+            expect(fs.readFileSync(filename, 'utf8')).to.equal('content');
+        });
+
+        it('should overwrite content of an existing file', () => {
             const filename = 'test.txt';
             const content = 'new content';
 
@@ -51,6 +62,31 @@ describe('File Operations', () => {
             fs.writeFileSync(filename, 'initial content');
 
             writeToFile(filename, content);
+
+            // Assert that the file now contains new content
+            expect(fs.readFileSync(filename, 'utf8')).to.equal('new content');
+        });
+
+        it('should return an error message if the file does not exist', () => {
+            const filename = 'nonexistent.txt';
+            const content = 'new content';
+
+            const result = writeToFile(filename, content);
+
+            // Assert that an error message is returned
+            expect(result).to.equal('Err: File does not exist');
+        });
+    });
+
+    describe('appendToFile', () => {
+        it('should append content to an existing file', () => {
+            const filename = 'test.txt';
+            const content = 'new content';
+
+            // Create a dummy file
+            fs.writeFileSync(filename, 'initial content');
+
+            appendToFile(filename, content);
 
             // Assert that the file now contains both initial and new content
             expect(fs.readFileSync(filename, 'utf8')).to.equal('initial content\nnew content');
@@ -60,7 +96,7 @@ describe('File Operations', () => {
             const filename = 'nonexistent.txt';
             const content = 'new content';
 
-            const result = writeToFile(filename, content);
+            const result = appendToFile(filename, content);
 
             // Assert that an error message is returned
             expect(result).to.equal('Err: File does not exist');
