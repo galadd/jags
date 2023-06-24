@@ -1,20 +1,8 @@
 const fs = require('fs');
+// const { readFile } = require('./fileOperation');
 
 // Specify the path to the file you want to read
 const filePath = 'hardhat.config.js';
-
-function readFileAsync(filePath) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      resolve(data);
-    });
-  });
-}
 
 function getNetworkUrls(data) {
   const moduleExportsRegex = /module\.exports\s*=\s*({[\s\S]*?\n})/g;
@@ -44,16 +32,13 @@ function getNetworkUrls(data) {
   }
 }
 
-// readFileAsync(filePath)
+module.export = getNetworkUrls
+
+// // Usage
+// readFile(filePath)
 //   .then(data => {
-//     const urls = getNetworkUrls(data);
-//     console.log('Network URLs:', urls);
+//     console.log(getNetworkUrls(data))
 //   })
 //   .catch(err => {
-//     console.error('Error:', err);
-//   });
-
-module.exports = {
-  getNetworkUrls,
-  readFileAsync,
-};
+//     console.error(`Error reading file: ${err}`);
+// });
