@@ -1,7 +1,9 @@
 const fs = require('fs');
+const path = require('path');
 const chai = require('chai');
 const mock = require('mock-fs');
-const { createFile, writeToFile } = require('../src/fileOperation');
+const assert = require('assert');
+const { createFile, writeToFile, scanDirectory } = require('../src/fileOperation');
 
 const expect = chai.expect;
 
@@ -63,5 +65,39 @@ describe('File Operations', () => {
             // Assert that an error message is returned
             expect(result).to.equal('Err: File does not exist');
         });
+    });
+});
+
+describe('Directory Scanner', () => {
+    const testDirectory = path.join(__dirname, 'test-directory');
+
+    before(() => {
+        // Create a test directory structure
+        fs.mkdirSync(testDirectory);
+        fs.writeFileSync(path.join(testDirectory, 'file1.json'), '');
+        fs.writeFileSync(path.join(testDirectory, 'file2.txt'), '');
+        fs.mkdirSync(path.join(testDirectory, '.git'));
+        fs.writeFileSync(path.join(testDirectory, '.git', 'file3.json'), '');
+        fs.mkdirSync(path.join(testDirectory, 'node_modules'));
+        fs.writeFileSync(path.join(testDirectory, 'node_modules', 'file4.json'), '');
+        fs.mkdirSync(path.join(testDirectory, 'subdirectory'));
+        fs.writeFileSync(path.join(testDirectory, 'subdirectory', 'file5.json'), '');
+        fs.writeFileSync(path.join(testDirectory, 'subdirectory', 'file6.txt'), '');
+    });
+
+    after(() => {
+        // Clean up the test directory
+        fs.rmSync(testDirectory, { recursive: true });
+    });
+
+    it('should scan the directory and return only files with the specified extension', () => {
+        const extension = '.json';
+        const expectedFiles = [
+        path.join(testDirectory, 'file1.json'),
+        path.join(testDirectory, 'subdirectory', 'file5.json')
+        ];
+
+        const result = scanDirectory(testDirectory, extension);
+        assert.deepStrictEqual(result, expectedFiles);
     });
 });
