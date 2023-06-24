@@ -1,53 +1,71 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
+const { createFile, writeToFile, scanDirectory } = require('../src/fileOperation');
 
 // Read the directory
-fs.readdir('.', (err, files) => {
-    if (err) {
+const jags = async (directoryPath) => {
+  
+  // Get the JSON files within the directory
+  const jsonFiles = scanDirectory(directoryPath, '.json');
+
+  // Process each JSON file
+  jsonFiles.forEach((jsonFile) => {
+
+    // Read the JSON file
+    fs.readFile(jsonFile, 'utf8', (err, dat) => {
+      if (err) {
         console.error(err);
         return;
-    }
+      }
 
-    // Filter the files to include only JSON files
-    const jsonFiles = files.filter((file) => path.extname(file) === '.json');
+      try {
+        let functions;
+        // Parse the JSON data
+        let data = JSON.parse(dat);
+        // Try to get the abi from the file
+        if (Array.isArray(data)) {
+          functions = data;
+        } else if (typeof data === 'object') {
+          if (data.bytecode !== undefined && data.bytecode.length < 3) {
+            return;
+          }
+          if (Array.isArray(data.abi)) {
+            functions = data.abi;
+          } else {
+            const values = Object.values(data);
+            values.forEach((value) => {
+              if (Array.isArray(value) && value.length > 3) {
+                functions = value;
+              }
+            });
+          }
+        }
+        // Return if we don't have an array
+        if (!Array.isArray(functions)) {
+          return;
+        }
 
-    // Process each JSON file
-    jsonFiles.forEach((jsonFile) => {
-        const filePath = path.join('.', jsonFile);
+        // Generate the JavaScript program
+        const jsProgram = generateJSProgram(functions, jsonFile);
 
-        // Read the JSON file
-        fs.readFile(filePath, 'utf8', (err, data) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-
-            try {
-                // Parse the JSON data
-                const functions = JSON.parse(data);
-
-                // Generate the JavaScript program
-                const jsProgram = generateJSProgram(functions, jsonFile);
-
-                // Write the JavaScript program to a file with the same name as the JSON file
-                const outputFile = path.join('.', `${path.basename(jsonFile, '.json')}.js`);
-                fs.writeFile(outputFile, jsProgram, (err) => {
-                    if (err) {
-                        console.error(err);
-                        return;
-                    }
-
-                    console.log(`JavaScript program generated successfully: ${outputFile}`);
-                });
-            } catch (err) {
-                console.error(`Error parsing JSON in file: ${filePath}`, err);
-            }
-        });
+        // Write the JavaScript program to a file with the same name as the JSON file
+        const outputFile = path.join('.', `${path.basename(jsonFile, '.json')}.js`);
+        createFile(outputFile)
+        const err = writeToFile(outputFile, jsProgram)
+        if (err == 'Nil') {
+          console.log(`JavaScript program generated successfully: ${outputFile}`);
+        }
+      } catch (err) {
+        console.error(`Error parsing JSON in file: ${filePath}`, err);
+      }
     });
-});
+  });
+};
+
 
 // Function to generate the JavaScript program
 function generateJSProgram(functions, jsonFileName) {
+  try {
     const jsHeader = `const Web3 = require("web3");
 const fs = require("fs");
 const dotenv = require("dotenv");
@@ -66,65 +84,86 @@ const privateKey = '0x' + process.env.PRIVATE_KEY;
 
     // Iterate over each function
     for (const func of functions) {
-        const { name, inputs, stateMutability } = func;
+      const { name, inputs, stateMutability } = func;
 
-        if (Array.isArray(inputs) && inputs.length > 0) {
-            // Generate the function signature
-            const functionSignature = generateFunctionSignature(name, inputs);
+      if (Array.isArray(inputs) && inputs.length > 0) {
+        // Generate the function signature
+        const functionSignature = generateFunctionSignature(name, inputs);
 
-            // Generate the function definition
-            const functionDefinition = generateFunctionDefinition(functionSignature, stateMutability, inputs);
+        // Generate the function definition
+        const functionDefinition = generateFunctionDefinition(
+          functionSignature,
+          stateMutability,
+          inputs
+        );
 
-            // Append the function definition to the JavaScript program
-            jsProgram += functionDefinition + '\n\n';
-        }
+        // Append the function definition to the JavaScript program
+        jsProgram += functionDefinition + "\n\n";
+      }
     }
 
     // Add the module.exports statement
-    jsProgram += 'module.exports = {\n';
+    jsProgram += "module.exports = {\n";
     for (const func of functions) {
-        const { name } = func;
-        jsProgram += `    ${name},\n`;
+      const { name } = func;
+      jsProgram += `    ${name},\n`;
     }
-    jsProgram += '};';
+    jsProgram += "};";
 
     return jsProgram.trim();
+  } catch (err) {
+    console.log("file not supported or incorrect abi format");
+  }
 }
 
 // Function to generate the function signature
 function generateFunctionSignature(name, inputs) {
-    const inputParams = inputs.map((input) => input.name).join(', ');
-    return `function ${name}(${inputParams})`;
+  const inputParams = inputs.map((input) => input.name).join(", ");
+  return `function ${name}(${inputParams})`;
 }
 
 // Function to generate the function definition
 function generateFunctionDefinition(signature, stateMutability) {
-    let functionDefinition = `${signature} {`;
+  let functionDefinition = `${signature} {`;
 
-    if (stateMutability === 'pure' || stateMutability === 'view') {
-        const functionCall = `return contract.methods.${signature.slice(9)}.call();`;
-        functionDefinition += `
-    // Call the Solidity function and handle the response
-    ${functionCall}
-}`;
-    } else if (stateMutability === 'nonpayable') {
-        const functionCall = `contract.methods.${signature.slice(9)}.send({ from: sender });;`;
-        functionDefinition += `
-    // Call the Solidity function and handle the response
-    ${functionCall}
-}`;
-} else if (stateMutability === 'payable') {
-    const functionCall = `contract.methods.${signature.slice(9)}.send({ from: sender, value: amount });`;
+  if (stateMutability === "pure" || stateMutability === "view") {
+    const functionCall = `return contract.methods.${signature.slice(
+      9
+    )}.call();`;
     functionDefinition += `
     // Call the Solidity function and handle the response
     ${functionCall}
 }`;
-    } else {
-        functionDefinition += `
+  } else if (stateMutability === "nonpayable") {
+    const functionCall = `contract.methods.${signature.slice(
+      9
+    )}.send({ from: sender });`;
+    functionDefinition += `
+    // Call the Solidity function and handle the response
+    ${functionCall}
+}`;
+  } else if (stateMutability === "payable") {
+    const functionCall = `contract.methods.${signature.slice(
+      9
+    )}.send({ from: sender, value: amount });`;
+    functionDefinition += `
+    // Call the Solidity function and handle the response
+    ${functionCall}
+}`;
+  } else {
+    functionDefinition += `
     // Logic for the ${signature}
     // Call the Solidity function and handle the response
 }`;
-    }
-
-    return functionDefinition;
+  }
+  return functionDefinition;
 }
+
+module.exports = {
+  generateJSProgram,
+  generateFunctionDefinition,
+  generateFunctionSignature,
+}
+
+const directoryPath = process.argv[2]; // Access the command-line argument for the directory
+jags(directoryPath);
