@@ -3,9 +3,9 @@ const path = require('path');
 const chai = require('chai');
 const mock = require('mock-fs');
 const assert = require('assert');
+const { promisify } = require('util');
+const readFile = promisify(fs.readFile);
 const { createFile, writeToFile, scanDirectory } = require('../src/fileOperation');
-
-const expect = chai.expect;
 
 describe('File Operations', () => {
 
@@ -29,18 +29,18 @@ describe('File Operations', () => {
         expect(fs.existsSync(filename)).to.be.true;
     });
 
-    it('should not create a new file if it already exists', () => {
-        const filename = 'test.txt';
+        it('should not create a new file if it already exists', () => {
+            const filename = 'test.txt';
 
-        // Create a dummy file
-        fs.writeFileSync(filename, 'dummy content');
+            // Create a dummy file
+            fs.writeFileSync(filename, 'dummy content');
 
-        createFile(filename);
+            createFile(filename);
 
-        // Assert that the file still has the original content
-        expect(fs.readFileSync(filename, 'utf8')).to.equal('dummy content');
+            // Assert that the file still has the original content
+            expect(fs.readFileSync(filename, 'utf8')).to.equal('dummy content');
+        });
     });
-});
 
     describe('writeToFile', () => {
         it('should append content to an existing file', () => {
@@ -66,6 +66,33 @@ describe('File Operations', () => {
             expect(result).to.equal('Err: File does not exist');
         });
     });
+
+    // describe('readFile', () => {
+    //     it('should read the contents of a file', async () => {
+    //         fs.writeFileSync('sample.txt', 'Sample file content');
+
+    //         const filePath = 'sample.txt';
+    //         const expectedData = 'Sample file content';
+
+    //         try {
+    //         const data = await readFile(filePath, 'utf8');
+    //             assert.strictEqual(data, expectedData);
+    //         } catch (error) {
+    //             assert.fail(`Error reading file: ${error}`);
+    //         }
+    //     });
+
+    //     it('should throw an error if the file does not exist', async () => {
+    //         const filePath = 'nonexistent/file.txt'; 
+
+    //         try {
+    //             await readFile(filePath, 'utf8');
+    //             assert.fail('Expected an error to be thrown');
+    //         } catch (error) {
+    //             assert.strictEqual(error.code, 'ENOENT');
+    //         }
+    //     });
+    // });
 });
 
 describe('Directory Scanner', () => {
