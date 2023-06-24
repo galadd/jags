@@ -137,7 +137,7 @@ function generateFunctionDefinition(signature, stateMutability) {
   } else if (stateMutability === "nonpayable") {
     const functionCall = `contract.methods.${signature.slice(
       9
-    )}.send({ from: sender });;`;
+    )}.send({ from: sender });`;
     functionDefinition += `
     // Call the Solidity function and handle the response
     ${functionCall}
@@ -156,8 +156,14 @@ function generateFunctionDefinition(signature, stateMutability) {
     // Call the Solidity function and handle the response
 }`;
   }
-
   return functionDefinition;
 }
 
-module.exports = jags;
+module.exports = {
+  generateJSProgram,
+  generateFunctionDefinition,
+  generateFunctionSignature,
+}
+
+const directoryPath = process.argv[2]; // Access the command-line argument for the directory
+jags(directoryPath);
