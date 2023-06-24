@@ -1,82 +1,67 @@
 const fs = require("fs");
 const path = require("path");
+const { createFile, writeToFile, scanDirectory } = require('../src/fileOperation');
 
 // Read the directory
-const jags = async () => {
-  // this is to access the test files
-  fs.readdir("test/jsons", (err, files) => {
-    // fs.readdir(".", (err, files) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
+const jags = async (directoryPath) => {
+  
+  // Get the JSON files within the directory
+  const jsonFiles = scanDirectory(directoryPath, '.json');
 
-    // Filter the files to include only JSON files
-    const jsonFiles = files.filter((file) => path.extname(file) === ".json");
+  // Process each JSON file
+  jsonFiles.forEach((jsonFile) => {
 
-    // Process each JSON file
-    jsonFiles.forEach((jsonFile) => {
-      const filePath = path.join("test/jsons", jsonFile);
+    // Read the JSON file
+    fs.readFile(jsonFile, 'utf8', (err, dat) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
 
-      // Read the JSON file
-      fs.readFile(filePath, "utf8", (err, dat) => {
-        if (err) {
-          console.error(err);
+      try {
+        let functions;
+        // Parse the JSON data
+        let data = JSON.parse(dat);
+        // Try to get the abi from the file
+        if (Array.isArray(data)) {
+          functions = data;
+        } else if (typeof data === 'object') {
+          if (data.bytecode !== undefined && data.bytecode.length < 3) {
+            return;
+          }
+          if (Array.isArray(data.abi)) {
+            functions = data.abi;
+          } else {
+            const values = Object.values(data);
+            values.forEach((value) => {
+              if (Array.isArray(value) && value.length > 3) {
+                functions = value;
+              }
+            });
+          }
+        }
+        // Return if we don't have an array
+        if (!Array.isArray(functions)) {
           return;
         }
 
-        try {
-          let functions;
-          // Parse the JSON data
-          let data = JSON.parse(dat);
-          // Try and get the abi from the file
-          if (Array.isArray(data)) {
-            functions = data;
-          } else if (typeof data === "object") {
-            if (data.bytecode !== undefined && data.bytecode.length < 3) {
-              return;
-            }
-            if (Array.isArray(data.abi)) {
-              functions = data.abi;
-            } else {
-              const values = Object.values(data);
-              values.forEach((value) => {
-                if (Array.isArray(value) && value.length > 3) {
-                  functions = value;
-                }
-              });
-            }
-          }
-          // return if we don't have an array
-          if (!Array.isArray(functions)) {
-            return;
-          }
+        // Generate the JavaScript program
+        const jsProgram = generateJSProgram(functions, jsonFile);
 
-          // Generate the JavaScript program
-          const jsProgram = generateJSProgram(functions, jsonFile);
-
-          // Write the JavaScript program to a file with the same name as the JSON file
-          const outputFile = path.join(
-            ".",
-            `${path.basename(jsonFile, ".json")}.js`
-          );
-          fs.writeFile(outputFile, jsProgram, (err) => {
-            if (err) {
-              console.error(err);
-              return;
-            }
-
-            console.log(
-              `JavaScript program generated successfully: ${outputFile}`
-            );
-          });
-        } catch (err) {
-          console.error(`Error parsing JSON in file: ${filePath}`, err);
+        // Write the JavaScript program to a file with the same name as the JSON file
+        const outputFile = path.join('.', `${path.basename(jsonFile, '.json')}.js`);
+        createFile(outputFile)
+        const err = writeToFile(outputFile, jsProgram)
+        if (err == 'Nil') {
+          console.log(`JavaScript program generated successfully: ${outputFile}`);
         }
-      });
+      } catch (err) {
+        console.error(`Error parsing JSON in file: ${filePath}`, err);
+      }
     });
   });
 };
+
 
 // Function to generate the JavaScript program
 function generateJSProgram(functions, jsonFileName) {
@@ -152,7 +137,7 @@ function generateFunctionDefinition(signature, stateMutability) {
   } else if (stateMutability === "nonpayable") {
     const functionCall = `contract.methods.${signature.slice(
       9
-    )}.send({ from: sender });;`;
+    )}.send({ from: sender });`;
     functionDefinition += `
     // Call the Solidity function and handle the response
     ${functionCall}
@@ -171,8 +156,14 @@ function generateFunctionDefinition(signature, stateMutability) {
     // Call the Solidity function and handle the response
 }`;
   }
-
   return functionDefinition;
 }
 
-module.exports = jags;
+module.exports = {
+  generateJSProgram,
+  generateFunctionDefinition,
+  generateFunctionSignature,
+}
+
+const directoryPath = process.argv[2]; // Access the command-line argument for the directory
+jags(directoryPath);
