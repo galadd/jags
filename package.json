@@ -24,6 +24,8 @@
     "mocha": "^10.2.0"
   },
   "dependencies": {
+    "chai": "^4.3.7",
+    "mock-fs": "^5.2.0",
     "sinon": "^15.1.0"
   }
 }
