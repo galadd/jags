@@ -84,17 +84,17 @@ const privateKey = '0x' + process.env.PRIVATE_KEY;
 
     // Iterate over each function
     for (const func of functions) {
-      const { name, inputs, stateMutability } = func;
+      if (func.type === "function")
 
-      if (Array.isArray(inputs) && inputs.length > 0) {
+      if (Array.isArray(func.inputs) && (func.inputs).length > 0) {
         // Generate the function signature
-        const functionSignature = generateFunctionSignature(name, inputs);
+        const functionSignature = generateFunctionSignature(func.name, func.inputs);
 
         // Generate the function definition
         const functionDefinition = generateFunctionDefinition(
           functionSignature,
-          stateMutability,
-          inputs
+          func.stateMutability,
+          func.inputs
         );
 
         // Append the function definition to the JavaScript program
@@ -105,8 +105,8 @@ const privateKey = '0x' + process.env.PRIVATE_KEY;
     // Add the module.exports statement
     jsProgram += "module.exports = {\n";
     for (const func of functions) {
-      const { name } = func;
-      jsProgram += `    ${name},\n`;
+      if (func.type === "function")
+      jsProgram += `    ${func.name},\n`;
     }
     jsProgram += "};";
 

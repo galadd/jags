@@ -99,6 +99,88 @@ describe("Generate JS Program", () => {
 
   describe("Generate SDK", () => {
 
+    it("should not generate the function when state type is constructor ", () => {
+
+      const func = [
+        { inputs: [], 
+          stateMutability: 'nonpayable', 
+          type: 'constructor' 
+        },
+        {
+          "inputs": [],
+          "name": "getOwner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+      const name = "owner.json"
+
+      // the stateMutability of the constructor is non-payable
+      // and non-payable has `.send({ from: sender })` in function logic
+
+      // check that `.send({ from: sender })` doesn't exist in the generated program
+      
+
+      const generated = generateJSProgram(func, name)
+
+      assert(!generated.includes(".send({ from: sender })"))
+    });
+
+    it("should not generate the function when state type is event ", () => {
+
+      const func = [
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "oldOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnerSet",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "getOwner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+      const name = "owner.json"
+
+      // the name of the event is OwnerSet
+
+      // check that `OwnerSet` doesn't exist in the generated program
+      
+
+      const generated = generateJSProgram(func, name)
+
+      assert(!generated.includes("OwnerSet"))
+    });
+
     it("should succesfully generate a full sdk program", () => {
       const functions = [
         {
