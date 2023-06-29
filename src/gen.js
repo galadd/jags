@@ -86,7 +86,7 @@ const privateKey = '0x' + process.env.PRIVATE_KEY;
     for (const func of functions) {
       if (func.type === "function")
 
-      if (Array.isArray(func.inputs) && (func.inputs).length > 0) {
+      if (Array.isArray(func.inputs) && (func.inputs).length >= 0) {
         // Generate the function signature
         const functionSignature = generateFunctionSignature(func.name, func.inputs);
 
