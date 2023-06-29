@@ -231,6 +231,11 @@ function deleteProduct() {
     contract.methods.deleteProduct().send({ from: sender });
 }
 
+function getProductsLength() {
+    // Call the Solidity function and handle the response
+    return contract.methods.getProductsLength().call();
+}
+
 module.exports = {
     buyProduct,
     deleteProduct,
